@@ -149,8 +149,6 @@ module.exports = class HomeyScriptApp extends Homey.App {
 
     this.homey.flow.getActionCard('runCodeWithArgReturnsString')
       .registerRunListener(async ({ code, argument }, state) => {
-        console.log(state);
-
         const result = await this.runScript({
           code,
           args: [argument],
@@ -159,6 +157,32 @@ module.exports = class HomeyScriptApp extends Homey.App {
 
         return {
           string: result
+        };
+      });
+
+    this.homey.flow.getActionCard('runCodeWithArgReturnsNumber')
+      .registerRunListener(async ({ code, argument }, state) => {
+        const result = await this.runScript({
+          code,
+          args: [argument],
+          realtime: state.realtime != null ? state.realtime : false,
+        });
+
+        return {
+          number: result
+        };
+      });
+
+    this.homey.flow.getActionCard('runCodeWithArgReturnsBoolean')
+      .registerRunListener(async ({ code, argument }, state) => {
+        const result = await this.runScript({
+          code,
+          args: [argument],
+          realtime: state.realtime != null ? state.realtime : false,
+        });
+
+        return {
+          boolean: result
         };
       });
 

@@ -9,8 +9,8 @@
   },
   "tokens": [
     {
-      "name": "string",
-      "type": "string",
+      "name": "number",
+      "type": "number",
       "title": {
         "en": "Result Tag",
         "nl": "Resultaat Tag"
