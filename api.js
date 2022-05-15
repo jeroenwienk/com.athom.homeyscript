@@ -33,10 +33,12 @@ module.exports = {
     } = body;
 
     try {
+      const script = await homey.app.getScript({ id });
+
       return {
         success: true,
         returns: await homey.app.runScript({
-          id,
+          script,
           code,
           args,
         }),

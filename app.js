@@ -102,9 +102,10 @@ module.exports = class HomeyScriptApp extends Homey.App {
     // Register Flow Cards
     this.homey.flow.getConditionCard('run')
       .registerRunListener(async ({ script }) => {
-        const { id } = script;
+        const scriptSource = await this.getScript({ id: script.id });
+
         return this.runScript({
-          id,
+          script: scriptSource,
           realtime: false,
         });
       })
@@ -112,9 +113,10 @@ module.exports = class HomeyScriptApp extends Homey.App {
 
     this.homey.flow.getConditionCard('runWithArg')
       .registerRunListener(async ({ script, argument }) => {
-        const { id } = script;
+        const scriptSource = await this.getScript({ id: script.id });
+
         return this.runScript({
-          id,
+          script: scriptSource,
           args: [argument],
           realtime: false,
         });
@@ -123,9 +125,10 @@ module.exports = class HomeyScriptApp extends Homey.App {
 
     this.homey.flow.getActionCard('run')
       .registerRunListener(async ({ script }) => {
-        const { id } = script;
+        const scriptSource = await this.getScript({ id: script.id });
+
         return this.runScript({
-          id,
+          script: scriptSource,
           realtime: false,
         });
       })
@@ -133,14 +136,31 @@ module.exports = class HomeyScriptApp extends Homey.App {
 
     this.homey.flow.getActionCard('runWithArg')
       .registerRunListener(async ({ script, argument }) => {
-        const { id } = script;
+        const scriptSource = await this.getScript({ id: script.id });
+
         return this.runScript({
           id,
+          script: scriptSource,
           args: [argument],
           realtime: false,
         });
       })
       .registerArgumentAutocompleteListener('script', query => this.onFlowGetScriptAutocomplete(query));
+
+    this.homey.flow.getActionCard('runCodeWithArgReturnsString')
+      .registerRunListener(async ({ code, argument }, state) => {
+        console.log(state);
+
+        const result = await this.runScript({
+          code,
+          args: [argument],
+          realtime: state.realtime != null ? state.realtime : false,
+        });
+
+        return {
+          string: result
+        };
+      });
 
     // Register Flow Tokens
     this.tokens = this.homey.settings.get('tokens') || {};
@@ -240,14 +260,18 @@ module.exports = class HomeyScriptApp extends Homey.App {
   }
 
   async runScript({
-    id,
     code,
+    script,
     args = [],
     realtime = true,
   }) {
-
-    // Get the Script
-    const script = await this.getScript({ id });
+    if (script == null) {
+      script = {
+        id: '__void__',
+        lastExecuted: new Date(),
+        name: 'Test'
+      };
+    }
 
     const homeyAPI = await this.getHomeyAPI();
 
@@ -331,8 +355,10 @@ module.exports = class HomeyScriptApp extends Homey.App {
       });
 
       script.lastExecuted = new Date();
-      this.homey.settings.set('scripts', this.scripts);
 
+      if (script.id !== '__void__') {
+        this.homey.settings.set('scripts', this.scripts);
+      }
 
       const result = await runPromise;
       log('\n———————————————————\n✅ Script Success\n');
